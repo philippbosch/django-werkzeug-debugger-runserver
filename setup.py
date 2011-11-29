@@ -7,7 +7,7 @@ def readme(filename):
 
 setup(
     name='django-werkzeug-debugger-runserver',
-    version='0.1.1',
+    version='0.1.2',
     description='Replaces Django\'s runserver command with one that includes the Werkzeug debugger (shamelessly ripped out off django-extensions)',
     long_description=readme('README.rst'),
     author='Philipp Bosch and https://github.com/django-extensions/django-extensions/contributors',
@@ -15,4 +15,7 @@ setup(
     license='BSD',
     url='http://github.com/philippbosch/django-werkzeug-debugger-runserver',
     packages=find_packages(),
+    install_requires=[
+        'Werkzeug',
+    ]
 )
