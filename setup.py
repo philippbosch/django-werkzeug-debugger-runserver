@@ -3,7 +3,8 @@ from setuptools import setup, find_packages
 
 def readme(filename):
     file = codecs.open(filename, 'r', 'utf-8')
-    return unicode(file.read())
+    contents = unicode(file.read())
+    return contents
 
 setup(
     name='django-werkzeug-debugger-runserver',
