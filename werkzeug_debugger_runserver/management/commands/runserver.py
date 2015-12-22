@@ -209,7 +209,10 @@ class Command(BaseCommand):
 
         def inner_run():
             print("Validating models...")
-            self.validate(display_num_errors=True)
+            try:
+                self.check(display_num_errors=True)
+            except AttributeError:
+                self.validate(display_num_errors=True)
             print("\nDjango version %s, using settings %r" % (django.get_version(), settings.SETTINGS_MODULE))
             print("Development server is running at %s" % (bind_url,))
             print("Using the Werkzeug debugger (http://werkzeug.pocoo.org/)")
