@@ -4,8 +4,7 @@ import six
 import socket
 import sys
 import time
-
-from optparse import make_option
+import argparse
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
@@ -71,41 +70,43 @@ def null_technical_500_response(request, exc_type, exc_value, tb):
 
 
 class Command(BaseCommand):
-    option_list = BaseCommand.option_list + (
-        make_option('--ipv6', '-6', action='store_true', dest='use_ipv6', default=False,
-                    help='Tells Django to use a IPv6 address.'),
-        make_option('--noreload', action='store_false', dest='use_reloader', default=True,
-                    help='Tells Django to NOT use the auto-reloader.'),
-        make_option('--browser', action='store_true', dest='open_browser',
-                    help='Tells Django to open a browser.'),
-        make_option('--adminmedia', dest='admin_media_path', default='',
-                    help='Specifies the directory from which to serve admin media.'),
-        make_option('--threaded', action='store_true', dest='threaded',
-                    help='Run in multithreaded mode.'),
-        make_option('--output', dest='output_file', default=None,
-                    help='Specifies an output file to send a copy of all messages (not flushed immediately).'),
-        make_option('--print-sql', action='store_true', default=False,
-                    help="Print SQL queries as they're executed"),
-        make_option('--cert', dest='cert_path', action="store", type="string",
-                    help='To use SSL, specify certificate path.'),
+    def add_arguments(self, parser):
 
-    )
-    if USE_STATICFILES:
-        option_list += (
-            make_option('--nostatic', action="store_false", dest='use_static_handler', default=True,
-                        help='Tells Django to NOT automatically serve static files at STATIC_URL.'),
-            make_option('--insecure', action="store_true", dest='insecure_serving', default=False,
-                        help='Allows serving static files even if DEBUG is False.'),
-        )
+        parser.add_argument('bind_address', nargs=argparse.REMAINDER,
+                            help='optional port number, or ipaddr:port')
+
+        parser.add_argument('--ipv6', '-6', action='store_true', dest='use_ipv6',
+                            default=False, help='Tells Django to use a IPv6 address.'),
+        parser.add_argument('--noreload', action='store_false', dest='use_reloader',
+                            default=True, help='Tells Django to NOT use the auto-reloader.')
+        parser.add_argument('--browser', action='store_true', dest='open_browser',
+                            help='Tells Django to open a browser.')
+        parser.add_argument('--adminmedia', dest='admin_media_path', default='',
+                            help='Specifies the directory from which to serve admin media.')
+        parser.add_argument('--threaded', action='store_true', dest='threaded',
+                            help='Run in multithreaded mode.')
+        parser.add_argument('--output', dest='output_file', default=None,
+                            help='Specifies an output file to send a copy of all messages (not flushed immediately).')
+        parser.add_argument('--print-sql', action='store_true', default=False,
+                            help="Print SQL queries as they're executed")
+        parser.add_argument('--cert', dest='cert_path', action="store",
+                            help='To use SSL, specify certificate path.')
+
+        if USE_STATICFILES:
+            parser.add_argument('--nostatic', action="store_false", dest='use_static_handler', default=True,
+                                help='Tells Django to NOT automatically serve static files at STATIC_URL.')
+            parser.add_argument('--insecure', action="store_true", dest='insecure_serving', default=False,
+                                help='Allows serving static files even if DEBUG is False.')
+
     help = "Starts a lightweight Web server for development."
-    args = '[optional port number, or ipaddr:port]'
 
     # Validation is called explicitly each time the server is reloaded.
     requires_model_validation = False
 
-    def handle(self, addrport='', *args, **options):
+    def handle(self, *args, **options):
         import django
 
+        addrport = options['bind_address'][0] if options['bind_address'] else None
         setup_logger(logger, self.stderr, filename=options.get('output_file', None))  # , fmt="[%(name)s] %(message)s")
         logredirect = RedirectHandler(__name__)
 
@@ -116,13 +117,13 @@ class Command(BaseCommand):
         werklogger.propagate = False
 
         if options.get("print_sql", False):
-            from django.db.backends import util
+            from django.db.backends import utils
             try:
                 import sqlparse
             except ImportError:
                 sqlparse = None  # noqa
 
-            class PrintQueryWrapper(util.CursorDebugWrapper):
+            class PrintQueryWrapper(utils.CursorDebugWrapper):
                 def execute(self, sql, params=()):
                     starttime = time.time()
                     try:
@@ -136,7 +137,7 @@ class Command(BaseCommand):
                         else:
                             logger.info(raw_sql + therest)
 
-            util.CursorDebugWrapper = PrintQueryWrapper
+            utils.CursorDebugWrapper = PrintQueryWrapper
 
         try:
             from django.core.servers.basehttp import AdminMediaHandler
