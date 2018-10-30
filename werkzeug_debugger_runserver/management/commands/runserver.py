@@ -65,7 +65,7 @@ class RedirectHandler(logging.Handler):
         self.logger.handle(record)
 
 
-def null_technical_500_response(request, exc_type, exc_value, tb):
+def null_technical_500_response(request, exc_type, exc_value, tb, status_code=500):
     six.reraise(exc_type, exc_value, tb)
 
 
