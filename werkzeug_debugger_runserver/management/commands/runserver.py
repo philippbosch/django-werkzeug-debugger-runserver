@@ -151,7 +151,8 @@ class Command(BaseCommand):
             from django.core.handlers.wsgi import WSGIHandler  # noqa
 
         try:
-            from werkzeug import run_simple, DebuggedApplication
+            from werkzeug import run_simple
+            from werkzeug.debug import DebuggedApplication
 
             # Set colored output
             if settings.DEBUG:
